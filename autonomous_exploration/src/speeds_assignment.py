@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
+import random
+import time
 
 from sensor_msgs.msg import Range
 from sensor_msgs.msg import LaserScan
@@ -83,6 +85,34 @@ class RobotController:
 
       # YOUR CODE HERE ------------------------------------------------------
       # Adjust the linear and angular velocities using the five sonars values
+      e = 0.0001 * random.randint(1,10)
+
+      if front >= 280:
+	front  = 10e16
+      if left >= 280:
+	left = 10e16
+      if right >= 280:
+	right  = 10e16
+      if r_left >= 280:
+	r_left = 10e16
+      if r_right >= 280:
+	r_right  = 10e16
+  
+
+      force_front = 1/(front + e)**2
+      force_left = 1/(left + e)**2
+      force_right = 1/(right + e)**2
+      force_r_left = 1/(r_left + e)**2
+      force_r_right = 1/(r_right + e)**2
+
+
+      linear = 0.7 * front/(r_left+r_right + front + e)
+      angular = ((0.3 * left + 0.2 * left/r_left * random.randint(1,10) * 0.1) - (0.3 * right + 0.2 * right/r_right * random.randint(1,10) * 0.1)) * force_front
+      if linear <= 0.10 and angular <= 0.01 :
+	if angular >= 0:
+	     angular = - 0.01 * random.randint(10,20) 
+	else:
+	     angular = + 0.01 * random.randint(10,20) 
 
       # ---------------------------------------------------------------------
 
@@ -136,8 +166,8 @@ class RobotController:
       [l_laser, a_laser] = self.produceSpeedsLaser()
       [l_goal, a_goal] = self.navigation.velocitiesToNextSubtarget()
 
-      self.linear_velocity  = 0
-      self.angular_velocity = 0
+      self.linear_velocity  = l_sonar
+      self.angular_velocity = a_sonar
         
       # Get the speeds using the motor schema approach
       # YOUR CODE HERE ------------------------------------------------------
